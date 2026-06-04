@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src *;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Walk</title>
+<style>
+  :root {
+    --navy: #1a2234;
+    --navy-light: #243050;
+    --accent: #e87c3a;
+    --accent-light: #f4a76a;
+    --border: #e2e5ea;
+    --border-dark: #c8cdd6;
+    --text: #1a2234;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --surface: #ffffff;
+    --surface-2: #f8f9fb;
+    --surface-3: #f1f3f6;
+    --success: #15803d;
+    --new-badge: #0369a1;
+    --tag-bg: #eff6ff;
+    --tag-text: #1e40af;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --slot-border: #dde1e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--surface-2); color: var(--text); font-size: 14px; }
+
+  /* ── SETUP SCREEN ─────────────────────────────────────── */
+  #setup-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--navy);
+  }
+  .setup-card {
+    background: white; border-radius: 16px; padding: 48px;
+    width: 460px; box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+  }
+  .setup-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+  .setup-logo-mark {
+    width: 36px; height: 36px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: white; font-size: 16px; letter-spacing: -1px;
+  }
+  .setup-logo-text { font-size: 18px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; }
+  .setup-card h2 { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.4px; }
+  .setup-card p { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+  .field-group { margin-bottom: 20px; }
+  .field-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .field-group input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; font-size: 14px; font-family: var(--font);
+    color: var(--text); background: var(--surface-2); outline: none;
+    transition: border-color 0.15s;
+  }
+  .field-group input:focus { border-color: var(--accent); background: white; }
+  .setup-btn {
+    width: 100%; background: var(--navy); color: white; border: none;
+    border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; font-family: var(--font);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .setup-btn:hover { background: var(--navy-light); }
+  .setup-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .setup-error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; color: #991b1b; font-size: 13px; margin-top: 14px; }
+
+  /* ── BUILDER SCREEN ───────────────────────────────────── */
+  #builder-screen { display: none; min-height: 100vh; background: var(--navy); }
+  .builder-header {
+    background: var(--navy); color: white; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .builder-header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo-mark {
+    width: 28px; height: 28px; background: var(--accent); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: white; font-size: 12px; letter-spacing: -0.5px; flex-shrink: 0;
+  }
+  .header-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-sub { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-ghost {
+    background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 7px; padding: 7px 14px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: background 0.15s; font-family: var(--font);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.14); }
+  .btn-accent {
+    background: var(--accent); color: white; border: none;
+    border-radius: 7px; padding: 7px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background 0.15s; font-family: var(--font);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-accent:hover { background: var(--accent-light); }
+
+  .builder-body { display: flex; height: calc(100vh - 56px); }
+
+  /* ── LEFT PANEL ───────────────────────────────────────── */
+  .panel-left {
+    width: 320px; flex-shrink: 0; background: #111827;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .panel-section-head {
+    padding: 16px 16px 10px; font-size: 11px; font-weight: 600;
+    color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .module-search {
+    margin: 0 12px 12px; position: relative;
+  }
+  .module-search input {
+    width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px; padding: 8px 10px 8px 32px; color: white; font-size: 13px;
+    font-family: var(--font); outline: none;
+  }
+  .module-search input::placeholder { color: rgba(255,255,255,0.3); }
+  .module-search input:focus { border-color: var(--accent); background: rgba(255,255,255,0.09); }
+  .module-search-icon {
+    position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+    color: rgba(255,255,255,0.3); font-size: 15px;
+  }
+  .module-list { flex: 1; overflow-y: auto; padding: 0 8px 16px; }
+  .module-list::-webkit-scrollbar { width: 4px; }
+  .module-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .module-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 10px; border-radius: 8px; cursor: pointer;
+    transition: background 0.12s; margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .module-item:hover { background: rgba(255,255,255,0.06); }
+  .module-item.added { opacity: 0.4; cursor: default; }
+  .module-item-left { min-width: 0; }
+  .module-item-name {
+    font-size: 13px; font-weight: 500; color: white;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .module-item-meta { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .module-badge {
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+    flex-shrink: 0; margin-left: 8px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .badge-new { background: rgba(3,105,161,0.3); color: #7dd3fc; }
+  .badge-current { background: rgba(21,128,61,0.25); color: #86efac; }
+  .badge-added { background: rgba(232,124,58,0.25); color: #fed7aa; }
+  .add-btn {
+    width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15);
+    background: transparent; color: rgba(255,255,255,0.5); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.12s; flex-shrink: 0;
+  }
+  .add-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+  .panel-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 4px 12px 8px; }
+
+  /* WALK SLOTS LIST */
+  .walk-slots-panel { border-top: 1px solid rgba(255,255,255,0.06); }
+  .walk-slots-head {
+    padding: 14px 16px 8px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .walk-slots-label {
+    font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35);
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .slot-count-pill {
+    background: var(--accent); color: white; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .walk-slot-list { padding: 0 8px 16px; max-height: 280px; overflow-y: auto; }
+  .walk-slot-list::-webkit-scrollbar { width: 4px; }
+  .walk-slot-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+  .walk-slot-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    border-radius: 7px; border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.04); margin-bottom: 4px; cursor: grab;
+  }
+  .walk-slot-item:active { cursor: grabbing; }
+  .walk-slot-item.drag-over { border-color: var(--accent); background: rgba(232,124,58,0.1); }
+  .slot-num {
+    width: 22px; height: 22px; border-radius: 5px; background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .slot-name {
+    flex: 1; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.75);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .slot-remove {
+    width: 20px; height: 20px; border-radius: 4px; border: none;
+    background: transparent; color: rgba(255,255,255,0.25); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    transition: all 0.12s;
+  }
+  .slot-remove:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+  .empty-walk {
+    padding: 20px 16px; text-align: center; color: rgba(255,255,255,0.2);
+    font-size: 12px; line-height: 1.6;
+  }
+
+  /* ── MAIN CONTENT ─────────────────────────────────────── */
+  .main-content { flex: 1; overflow-y: auto; background: var(--surface-2); }
+  .main-content::-webkit-scrollbar { width: 6px; }
+  .main-content::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
+
+  /* TAB BAR */
+  .tab-bar {
+    background: white; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 0;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .tab {
+    padding: 14px 18px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border-bottom: 2px solid transparent; color: var(--text-muted);
+    transition: all 0.15s; margin-bottom: -1px; white-space: nowrap;
+  }
+  .tab.active { border-bottom-color: var(--accent); color: var(--navy); font-weight: 600; }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* PRICE TOGGLE */
+  .price-toggle {
+    margin-left: auto; display: flex; align-items: center; gap: 6px;
+    background: var(--surface-3); border-radius: 7px; padding: 3px;
+  }
+  .pt-btn {
+    padding: 5px 12px; border-radius: 5px; border: none; background: transparent;
+    font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer;
+    font-family: var(--font); transition: all 0.12s; white-space: nowrap;
+  }
+  .pt-btn.active { background: white; color: var(--navy); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* PLACEHOLDER */
+  .placeholder-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: calc(100vh - 120px); color: var(--text-light); text-align: center;
+    padding: 40px;
+  }
+  .placeholder-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .placeholder-state h3 { font-size: 18px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+  .placeholder-state p { font-size: 14px; color: var(--text-light); max-width: 320px; line-height: 1.6; }
+
+  /* ── MAIN WALK TAB ────────────────────────────────────── */
+  #tab-walk { padding: 24px; display: none; }
+  #tab-walk.active { display: block; }
+
+  .slot-card {
+    background: white; border-radius: 12px; border: 1px solid var(--slot-border);
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .slot-card-header {
+    padding: 14px 18px 10px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  }
+  .slot-card-header-left { min-width: 0; flex: 1; }
+  .slot-number {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; background: var(--navy); color: white;
+    border-radius: 5px; font-size: 10px; font-weight: 700; margin-right: 8px; flex-shrink: 0;
+  }
+  .slot-title { font-size: 16px; font-weight: 700; color: var(--navy); letter-spacing: -0.3px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .callout-tag {
+    display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 4px; background: var(--tag-bg); color: var(--tag-text); margin-right: 4px;
+    text-transform: uppercase; letter-spacing: 0.3px; flex-shrink: 0;
+  }
+  .callout-new { background: #e0f2fe; color: #0369a1; }
+  .slot-showroom { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+  .market-intro-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+    background: #fef3c7; color: #92400e;
+  }
+  .view-more-btn {
+    flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--accent);
+    background: none; border: 1px solid var(--accent); border-radius: 6px;
+    padding: 5px 12px; cursor: pointer; transition: all 0.12s; font-family: var(--font);
+    white-space: nowrap;
+  }
+  .view-more-btn:hover { background: var(--accent); color: white; }
+
+  .slot-body { display: flex; gap: 0; }
+  .slot-hero-col {
+    width: 260px; flex-shrink: 0; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .slot-hero-img {
+    width: 100%; height: 180px; object-fit: cover; background: var(--surface-3);
+    display: block;
+  }
+  .slot-hero-placeholder {
+    width: 100%; height: 180px; background: var(--surface-3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-light); font-size: 28px;
+  }
+  .slot-notes {
+    flex: 1; border-top: 1px solid var(--border); padding: 10px 12px;
+    min-height: 64px; background: #fffef5; font-size: 12px;
+    color: var(--text-light); font-style: italic;
+  }
+  .slot-notes[contenteditable="true"] { outline: none; color: var(--text); font-style: normal; cursor: text; }
+  .slot-notes[contenteditable="true"]:empty:before {
+    content: attr(data-placeholder); color: var(--text-light); font-style: italic; pointer-events: none;
+  }
+
+  /* MAIN ITEMS col (spots 1-3) */
+  .slot-items-col { flex: 1; min-width: 0; }
+  .spot-row {
+    display: flex; align-items: flex-start; padding: 11px 16px; gap: 12px;
+    border-bottom: 1px solid var(--surface-3);
+  }
+  .spot-row:last-child { border-bottom: none; }
+  .spot-num-badge {
+    width: 20px; height: 20px; border-radius: 4px; background: var(--surface-3);
+    color: var(--text-muted); font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .spot-info { flex: 1; min-width: 0; }
+  .spot-sku { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; font-family: 'Courier New', monospace; }
+  .spot-name { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+  .spot-dims { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .spot-status-new { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #dbeafe; color: #1d4ed8; margin-left: 5px; vertical-align: middle; text-transform: uppercase; }
+  .spot-price { font-size: 16px; font-weight: 700; color: var(--navy); flex-shrink: 0; text-align: right; min-width: 52px; }
+  .spot-empty .spot-name { color: var(--text-light); font-style: italic; font-weight: 400; }
+
+  /* ACCESSORIES STRIP (spots 9,10,12,13,15,17) */
+  .slot-acc-strip {
+    border-top: 1px solid var(--border);
+    display: flex; align-items: stretch;
+  }
+  .acc-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 6px 10px; border-right: 1px solid var(--border); text-align: center;
+    min-width: 0;
+  }
+  .acc-item:last-child { border-right: none; }
+  .acc-icon { width: 36px; height: 36px; object-fit: contain; margin-bottom: 4px; opacity: 0.85; }
+  .acc-icon-placeholder { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--text-light); font-size: 22px; margin-bottom: 4px; }
+  .acc-label { font-size: 9px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .acc-price { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .acc-sku { font-size: 9px; color: var(--text-light); margin-top: 1px; font-family: 'Courier New', monospace; }
+  .acc-empty .acc-price { color: var(--text-light); font-size: 11px; font-weight: 400; }
+
+  /* ── PRODUCT TABLES TAB ───────────────────────────────── */
+  #tab-products { padding: 24px; display: none; }
+  #tab-products.active { display: block; }
+
+  .product-slot-card {
+    background: white; border-radius: 12px; border: 1px solid var(--slot-border);
+    margin-bottom: 24px; overflow: hidden;
+  }
+  .product-slot-header {
+    padding: 14px 20px; background: var(--navy); color: white;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .product-slot-num {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: rgba(255,255,255,0.12); color: white;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .product-slot-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; flex: 1; }
+  .product-slot-meta { font-size: 12px; color: rgba(255,255,255,0.5); }
+
+  .product-table { width: 100%; border-collapse: collapse; }
+  .product-table th {
+    padding: 8px 16px; font-size: 10px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+    background: var(--surface-3); border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .product-table th.right { text-align: right; }
+  .product-table td {
+    padding: 9px 16px; border-bottom: 1px solid var(--surface-3);
+    font-size: 13px; vertical-align: middle;
+  }
+  .product-table tr:last-child td { border-bottom: none; }
+  .product-table tr:hover td { background: var(--surface-2); }
+  .pt-spot { width: 28px; text-align: center; }
+  .pt-spot-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 4px; background: var(--surface-3);
+    color: var(--text-muted); font-size: 10px; font-weight: 700;
+  }
+  .pt-img { width: 44px; }
+  .pt-product-img {
+    width: 38px; height: 38px; object-fit: cover; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface-3);
+  }
+  .pt-sku { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-muted); }
+  .pt-name { font-weight: 500; color: var(--navy); }
+  .pt-kit { font-size: 11px; color: var(--text-light); }
+  .pt-dims { font-size: 11px; color: var(--text-muted); }
+  .pt-price { text-align: right; font-weight: 700; font-size: 14px; color: var(--navy); }
+  .pt-status-new { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #dbeafe; color: #1d4ed8; margin-left: 4px; vertical-align: middle; text-transform: uppercase; }
+  .pt-status-current { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #dcfce7; color: #166534; margin-left: 4px; vertical-align: middle; text-transform: uppercase; }
+  .pt-group-header td {
+    padding: 6px 16px; background: var(--surface-3); font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(17,24,39,0.7);
+    display: flex; align-items: center; justify-content: center; z-index: 999;
+    backdrop-filter: blur(4px);
+  }
+  .loading-box {
+    background: white; border-radius: 14px; padding: 32px 40px;
+    text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite; margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-box p { color: var(--text-muted); font-size: 14px; }
+
+  /* PRINT */
+  @media print {
+    .builder-header, .panel-left, .tab-bar { display: none !important; }
+    .builder-body { display: block; height: auto; }
+    .main-content { overflow: visible; }
+    #tab-walk, #tab-products { display: block !important; }
+    .slot-card, .product-slot-card { page-break-inside: avoid; break-inside: avoid; }
+    body { background: white; }
+    .view-more-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="setup-logo-mark">MW</div>
+      <div class="setup-logo-text">Market Walk</div>
+    </div>
+    <h2>Connect to Airtable</h2>
+    <p>Enter your personal access token to load your Market Walk modules from Product Base 2.0.</p>
+    <div class="field-group">
+      <label>Airtable Personal Access Token</label>
+      <input type="password" id="pat-input" placeholder="patXXXXXXXXXXXXXX.XXXX..." autocomplete="off" />
+    </div>
+    <button class="setup-btn" id="connect-btn" >
+      <span id="connect-btn-text">Connect & Load Modules</span>
+    </button>
+    <div id="setup-error" style="display:none"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="builder-screen">
+  <div class="builder-header">
+    <div class="builder-header-left">
+      <div class="header-logo-mark">MW</div>
+      <div>
+        <div class="header-title">Market Walk Builder</div>
+        <div class="header-sub" id="header-sub">Ashley Furniture · Las Vegas</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" >↻ Refresh</button>
+      <button class="btn-accent" >⎙ Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div class="builder-body">
+    <!-- LEFT PANEL -->
+    <div class="panel-left">
+      <div class="panel-section-head">Market Walk Modules</div>
+      <div class="module-search">
+        <span class="module-search-icon">⌕</span>
+        <input type="text" placeholder="Search modules..." id="module-search"  />
+      </div>
+      <div class="module-list" id="module-list">
+        <div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.2); font-size: 13px;">Loading modules...</div>
+      </div>
+
+      <div class="walk-slots-panel">
+        <div class="walk-slots-head">
+          <div class="walk-slots-label">Walk Slots</div>
+          <div class="slot-count-pill" id="slot-count">0</div>
+        </div>
+        <div class="walk-slot-list" id="walk-slot-list">
+          <div class="empty-walk" id="empty-walk-msg">Add modules from above<br>to build your walk</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content" id="main-content">
+      <div class="tab-bar">
+        <div class="tab active" id="tab-walk-btn" >Main Walk</div>
+        <div class="tab" id="tab-products-btn" >Product Tables</div>
+        <div class="price-toggle">
+          <button class="pt-btn active" id="price-regular">Regular</button>
+          <button class="pt-btn" id="price-wc">WC Cost</button>
+          <button class="pt-btn" id="price-w335">W335</button>
+        </div>
+      </div>
+
+      <div id="tab-walk" class="active">
+        <div class="placeholder-state" id="walk-placeholder">
+          <div class="placeholder-icon">🗺</div>
+          <h3>Your walk is empty</h3>
+          <p>Add modules from the left panel to start building your market walk presentation.</p>
+        </div>
+        <div id="walk-slots-render"></div>
+      </div>
+
+      <div id="tab-products">
+        <div class="placeholder-state" id="products-placeholder">
+          <div class="placeholder-icon">📋</div>
+          <h3>No slots yet</h3>
+          <p>Add modules to your walk to see full product detail tables here.</p>
+        </div>
+        <div id="products-slots-render"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay" style="display:none">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p id="loading-msg">Loading modules...</p>
+  </div>
+</div>
+
+<script>
+const BASE_ID = 'appiVshE8JG5sBWZT';
+const MODULES_TABLE = 'tblgwN3er0hTXsG6o';
+const LINE_ITEMS_TABLE = 'tblOEDxmgz34NvWO8';
+const MARKET_WALK_TYPE_ID = 'selR36ASvtNWGZlcz';
+
+const FIELD = {
+  MODULE_NAME: 'fldr9Rb9SzSEXvNZ1',
+  MODULE_COLLECTION: 'fldQihDai3aINgBbg',
+  MODULE_HERO: 'flda85td6oEOub7pZ',
+  MODULE_SHOWROOM: 'fldzwGi5kV7BbCrkq',
+  MODULE_CALLOUTS: 'fldFu0XPUchW0071u',
+  MODULE_STATUS: 'fldnCQjJHnGrIAhsU',
+  MODULE_MARKET_INTRO: 'fldDeDWorYHYGlclb',
+  MODULE_LINE_ITEMS: 'fldoMYCaQBosXxiFg',
+  MODULE_TYPE: 'fldBLKDRwepLq8RfD',
+  LI_NAME: 'fldY68RHZSyhgY4PM',
+  LI_SKU: 'fld8F9FRk21PAERpH',
+  LI_ITEM_NAME: 'fldjhwoVmllpATSPG',
+  LI_DIMS: 'fldEXlcTWsW5hKqL0',
+  LI_REGULAR: 'fldGTuKnYHnYf9KVI',
+  LI_WC: 'fldDilJzFAIDJbwMa',
+  LI_W335: 'fldNOD1XhblyKfiCo',
+  LI_KO_URL: 'fldu2IRPsipko7yTT',
+  LI_ROOM_URL: 'fldBJD5X8ExTQc0iY',
+  LI_STATUS: 'fldF0nidkLjKbfqdH',
+  LI_KIT: 'fldMuSzqfibyPOI2A',
+  LI_SORT: 'fldAjRtWSLLccVIrs',
+};
+
+// Static category icons (spot positions → icon)
+const SPOT_ICONS = {
+  9:  { label: 'CKTL/PK',  svg: '⬡' },
+  10: { label: 'END',      svg: '▣' },
+  12: { label: 'M. RUG',   svg: '▦' },
+  13: { label: 'L. RUG',   svg: '▩' },
+  15: { label: 'LAMP',     svg: '◎' },
+  17: { label: 'A. CHAIR', svg: '⊡' },
+};
+
+// Icon images for the accessory strip (reusing Ashley CDN-style KO images)
+const SPOT_ICON_URLS = {
+  9:  'https://i.imgur.com/GkVQf9G.png',
+  10: 'https://i.imgur.com/7cAKSfD.png',
+  12: 'https://i.imgur.com/H3n7JvB.png',
+  13: 'https://i.imgur.com/H3n7JvB.png',
+  15: 'https://i.imgur.com/bHxmP4w.png',
+  17: 'https://i.imgur.com/S8mQK6V.png',
+};
+
+let PAT = '';
+let allModules = [];
+let walkSlots = [];
+let lineItemsCache = {};
+let priceMode = 'regular';
+
+function getLV(fieldData, fallback = '') {
+  if (!fieldData) return fallback;
+  if (typeof fieldData === 'string' || typeof fieldData === 'number') return fieldData;
+  if (Array.isArray(fieldData)) {
+    if (fieldData.length === 0) return fallback;
+    const first = fieldData[0];
+    if (typeof first === 'string' || typeof first === 'number') return first;
+    if (first && first.name) return first.name;
+  }
+  if (fieldData.valuesByLinkedRecordId) {
+    const vals = Object.values(fieldData.valuesByLinkedRecordId);
+    if (vals.length > 0) {
+      const v = vals[0];
+      if (Array.isArray(v) && v.length > 0) {
+        const item = v[0];
+        if (typeof item === 'string' || typeof item === 'number') return item;
+        if (item && item.name) return item.name;
+      }
+    }
+  }
+  if (fieldData.name) return fieldData.name;
+  return fallback;
+}
+
+function getAllLVs(fieldData) {
+  if (!fieldData) return [];
+  if (Array.isArray(fieldData)) {
+    return fieldData.map(x => (typeof x === 'string' ? x : (x && x.name) ? x.name : '')).filter(Boolean);
+  }
+  if (fieldData.valuesByLinkedRecordId) {
+    const allVals = [];
+    for (const vals of Object.values(fieldData.valuesByLinkedRecordId)) {
+      if (Array.isArray(vals)) {
+        for (const v of vals) {
+          if (typeof v === 'string') allVals.push(v);
+          else if (v && v.name) allVals.push(v.name);
+        }
+      }
+    }
+    return allVals;
+  }
+  return [];
+}
+
+function fmt(val) {
+  const n = parseFloat(val);
+  if (isNaN(n) || n === 0) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function getPrice(li) {
+  const f = priceMode === 'regular' ? FIELD.LI_REGULAR : priceMode === 'wc' ? FIELD.LI_WC : FIELD.LI_W335;
+  return fmt(getLV(li.cellValuesByFieldId[f], 0));
+}
+
+async function airtableFetch(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const resp = await fetch(url, {
+      headers: { Authorization: 'Bearer ' + PAT },
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`Airtable ${resp.status}: ${errText}`);
+    }
+    return resp.json();
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('Request timed out — check your token and network.');
+    throw e;
+  }
+}
+
+async function connectAirtable() {
+  const pat = document.getElementById('pat-input').value.trim();
+  if (!pat) return;
+  PAT = pat;
+  const btn = document.getElementById('connect-btn');
+  btn.disabled = true;
+  document.getElementById('connect-btn-text').textContent = 'Connecting...';
+  document.getElementById('setup-error').style.display = 'none';
+  try {
+    await loadModules();
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('builder-screen').style.display = 'block';
+  } catch (e) {
+    document.getElementById('setup-error').style.display = 'block';
+    document.getElementById('setup-error').className = 'setup-error';
+    document.getElementById('setup-error').textContent = 'Connection failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    document.getElementById('connect-btn-text').textContent = 'Connect & Load Modules';
+  }
+}
+
+async function loadModules() {
+  showLoading("Loading Market Walk modules...");
+  allModules = [];
+  let offset = null;
+  const fields = [FIELD.MODULE_NAME, FIELD.MODULE_COLLECTION, FIELD.MODULE_HERO, FIELD.MODULE_SHOWROOM, FIELD.MODULE_CALLOUTS, FIELD.MODULE_STATUS, FIELD.MODULE_MARKET_INTRO, FIELD.MODULE_LINE_ITEMS, FIELD.MODULE_TYPE];
+  const fieldParams = fields.map(f => "fields%5B%5D=" + encodeURIComponent(f)).join("&");
+  const allRecords = [];
+  do {
+    let url = "https://api.airtable.com/v0/" + BASE_ID + "/" + MODULES_TABLE + "?" + fieldParams + "&pageSize=100";
+    if (offset) url += "&offset=" + encodeURIComponent(offset);
+    const data = await airtableFetch(url);
+    allRecords.push(...(data.records || []));
+    offset = data.offset || null;
+  } while (offset);
+  allModules = allRecords.filter(m => {
+    const t = m.cellValuesByFieldId[FIELD.MODULE_TYPE];
+    if (!t) return false;
+    const name = typeof t === "string" ? t : (t.name || "");
+    const id = t.id || "";
+    return name === "Market Walk" || id === MARKET_WALK_TYPE_ID;
+  });
+  hideLoading();
+  renderModuleList();
+}
+
+async function refreshModules() {
+  await loadModules();
+  renderWalk();
+}
+
+function renderModuleList(filter = '') {
+  const list = document.getElementById('module-list');
+  const lower = filter.toLowerCase();
+  const filtered = allModules.filter(m => {
+    const name = getLV(m.cellValuesByFieldId[FIELD.MODULE_NAME], '');
+    return !filter || name.toLowerCase().includes(lower);
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.2);font-size:13px;">No modules found</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(m => {
+    const name = getLV(m.cellValuesByFieldId[FIELD.MODULE_NAME], 'Unnamed');
+    const cleanName = name.replace(' - Market Walk', '');
+    const showroom = getLV(m.cellValuesByFieldId[FIELD.MODULE_SHOWROOM], '');
+    const statusVals = getAllLVs(m.cellValuesByFieldId[FIELD.MODULE_STATUS]);
+    const status = statusVals[0] || '';
+    const isAdded = walkSlots.some(s => s.id === m.id);
+    const badgeClass = status === 'New' ? 'badge-new' : 'badge-current';
+    const badgeLabel = status || 'Unknown';
+    return `<div class="module-item ${isAdded ? 'added' : ''}" id="mi-${m.id}">
+      <div class="module-item-left">
+        <div class="module-item-name" title="${cleanName}">${cleanName}</div>
+        <div class="module-item-meta">${showroom}</div>
+      </div>
+      <span class="module-badge ${badgeClass}">${badgeLabel}</span>
+      ${isAdded
+        ? `<button class="add-btn" disabled title="Already added" style="opacity:0.3">✓</button>`
+        : `<button class="add-btn" data-module-id="${m.id}" title="Add to walk">+</button>`
+      }
+    </div>`;
+  }).join('');
+}
+
+function filterModules(val) { renderModuleList(val); }
+
+function addSlot(moduleId) {
+  if (walkSlots.length >= 100) { alert('Maximum 100 slots reached.'); return; }
+  const mod = allModules.find(m => m.id === moduleId);
+  if (!mod || walkSlots.some(s => s.id === moduleId)) return;
+  walkSlots.push(mod);
+  renderSlotList();
+  renderModuleList(document.getElementById('module-search').value);
+  renderWalk();
+}
+
+function removeSlot(idx) {
+  walkSlots.splice(idx, 1);
+  renderSlotList();
+  renderModuleList(document.getElementById('module-search').value);
+  renderWalk();
+}
+
+function renderSlotList() {
+  const list = document.getElementById('walk-slot-list');
+  const emptyMsg = document.getElementById('empty-walk-msg');
+  document.getElementById('slot-count').textContent = walkSlots.length;
+  if (walkSlots.length === 0) {
+    list.innerHTML = `<div class="empty-walk" id="empty-walk-msg">Add modules from above<br>to build your walk</div>`;
+    return;
+  }
+  list.innerHTML = walkSlots.map((m, i) => {
+    const name = getLV(m.cellValuesByFieldId[FIELD.MODULE_NAME], 'Unnamed').replace(' - Market Walk', '');
+    return `<div class="walk-slot-item" draggable="true" data-idx="${i}">
+      <div class="slot-num">${i + 1}</div>
+      <div class="slot-name" title="${name}">${name}</div>
+      <button class="slot-remove" data-idx="${i}" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+let dragSrcIdx = null;
+function dragStart(i) { dragSrcIdx = i; }
+function dragOver(e, i) { e.preventDefault(); document.querySelectorAll('.walk-slot-item')[i]?.classList.add('drag-over'); }
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function drop(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.walk-slot-item').forEach(el => el.classList.remove('drag-over'));
+  if (dragSrcIdx === null || dragSrcIdx === i) return;
+  const [moved] = walkSlots.splice(dragSrcIdx, 1);
+  walkSlots.splice(i, 0, moved);
+  dragSrcIdx = null;
+  renderSlotList();
+  renderWalk();
+}
+
+async function getLineItems(module) {
+  if (lineItemsCache[module.id]) return lineItemsCache[module.id];
+  const liRefs = module.cellValuesByFieldId[FIELD.MODULE_LINE_ITEMS];
+  if (!liRefs || !Array.isArray(liRefs) || liRefs.length === 0) {
+    lineItemsCache[module.id] = [];
+    return [];
+  }
+  const ids = liRefs.map(r => r.id || r);
+  const fields = [FIELD.LI_NAME, FIELD.LI_SKU, FIELD.LI_ITEM_NAME, FIELD.LI_DIMS, FIELD.LI_REGULAR, FIELD.LI_WC, FIELD.LI_W335, FIELD.LI_KO_URL, FIELD.LI_ROOM_URL, FIELD.LI_STATUS, FIELD.LI_KIT, FIELD.LI_SORT];
+  const fieldParams = fields.map(f => `fields%5B%5D=${f}`).join('&');
+  const recordParams = ids.map(id => `records%5B%5D=${id}`).join('&');
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${LINE_ITEMS_TABLE}?${fieldParams}&${recordParams}&sort%5B0%5D%5Bfield%5D=${FIELD.LI_SORT}&sort%5B0%5D%5Bdirection%5D=asc`;
+  const data = await airtableFetch(url);
+  lineItemsCache[module.id] = data.records || [];
+  return lineItemsCache[module.id];
+}
+
+async function renderWalk() {
+  const walkRender = document.getElementById('walk-slots-render');
+  const productsRender = document.getElementById('products-slots-render');
+  const walkPH = document.getElementById('walk-placeholder');
+  const productsPH = document.getElementById('products-placeholder');
+
+  if (walkSlots.length === 0) {
+    walkRender.innerHTML = '';
+    productsRender.innerHTML = '';
+    walkPH.style.display = 'flex';
+    productsPH.style.display = 'flex';
+    return;
+  }
+  walkPH.style.display = 'none';
+  productsPH.style.display = 'none';
+  showLoading('Fetching product data...');
+
+  // Load all line items in parallel
+  const allLIs = await Promise.all(walkSlots.map(m => getLineItems(m)));
+  hideLoading();
+
+  walkRender.innerHTML = walkSlots.map((m, i) => renderSlotCard(m, allLIs[i], i)).join('');
+  productsRender.innerHTML = walkSlots.map((m, i) => renderProductTable(m, allLIs[i], i)).join('');
+}
+
+function renderSlotCard(m, lineItems, idx) {
+  const fields = m.cellValuesByFieldId;
+  const name = getLV(fields[FIELD.MODULE_NAME], 'Unnamed').replace(' - Market Walk', '');
+  const hero = getLV(fields[FIELD.MODULE_HERO], '');
+  const showroom = getLV(fields[FIELD.MODULE_SHOWROOM], '');
+  const callouts = getAllLVs(fields[FIELD.MODULE_CALLOUTS]);
+  const statusVals = getAllLVs(fields[FIELD.MODULE_STATUS]);
+  const status = statusVals[0] || '';
+  const marketIntro = getLV(fields[FIELD.MODULE_MARKET_INTRO], '');
+
+  const spotMap = {};
+  for (const li of lineItems) {
+    const sort = li.cellValuesByFieldId[FIELD.LI_SORT];
+    if (sort) spotMap[sort] = li;
+  }
+
+  // Spots 1,2,3 — main items
+  const mainSpots = [1,2,3].map(spot => {
+    const li = spotMap[spot];
+    if (!li) return `<div class="spot-row spot-empty">
+      <div class="spot-num-badge">${spot}</div>
+      <div class="spot-info"><div class="spot-name">—</div></div>
+      <div class="spot-price">—</div>
+    </div>`;
+    const f = li.cellValuesByFieldId;
+    const sku = getLV(f[FIELD.LI_SKU], '');
+    const itemName = getLV(f[FIELD.LI_ITEM_NAME], '');
+    const dims = getLV(f[FIELD.LI_DIMS], '');
+    const price = getPrice(li);
+    const liStatus = getLV(f[FIELD.LI_STATUS], '');
+    return `<div class="spot-row">
+      <div class="spot-num-badge">${spot}</div>
+      <div class="spot-info">
+        <div class="spot-sku">${sku}</div>
+        <div class="spot-name">${itemName}${liStatus === 'New' ? '<span class="spot-status-new">New</span>' : ''}</div>
+        <div class="spot-dims">${dims}</div>
+      </div>
+      <div class="spot-price">${price}</div>
+    </div>`;
+  }).join('');
+
+  // Accessory strip: spots 9,10,12,13,15,17
+  const accSpots = [9,10,12,13,15,17].map(spot => {
+    const info = SPOT_ICONS[spot];
+    const li = spotMap[spot];
+    const koUrl = li ? getLV(li.cellValuesByFieldId[FIELD.LI_KO_URL], '') : '';
+    const sku = li ? getLV(li.cellValuesByFieldId[FIELD.LI_SKU], '') : '';
+    const price = li ? getPrice(li) : '—';
+    const imgTag = koUrl
+      ? `<img src="${koUrl}" class="acc-icon" alt="${info.label}" onerror="this.style.display='none'">`
+      : `<div class="acc-icon-placeholder">${info.svg}</div>`;
+    return `<div class="acc-item ${!li ? 'acc-empty' : ''}">
+      ${imgTag}
+      <div class="acc-label">${info.label}</div>
+      <div class="acc-price">${price}</div>
+      <div class="acc-sku">${sku}</div>
+    </div>`;
+  }).join('');
+
+  const calloutsHtml = callouts.map(c => `<span class="callout-tag">${c}</span>`).join('');
+  const marketIntroHtml = marketIntro ? `<span class="market-intro-tag">★ ${marketIntro}</span>` : '';
+
+  return `<div class="slot-card">
+    <div class="slot-card-header">
+      <div class="slot-card-header-left">
+        <div class="slot-title">
+          <span class="slot-number">${idx + 1}</span>
+          ${name}
+        </div>
+        <div style="margin-top:6px">${calloutsHtml}</div>
+        <div class="slot-showroom">
+          ${showroom ? `<span>${showroom}</span>` : ''}
+          ${status === 'New' ? '<span class="callout-tag callout-new">New</span>' : ''}
+          ${marketIntroHtml}
+        </div>
+      </div>
+      <button class="view-more-btn" data-idx="${idx}">View More →</button>
+    </div>
+    <div class="slot-body">
+      <div class="slot-hero-col">
+        ${hero
+          ? `<img src="${hero}" class="slot-hero-img" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+          : ''
+        }
+        <div class="slot-hero-placeholder" style="${hero ? 'display:none' : ''}">🛋</div>
+        <div class="slot-notes" contenteditable="true" data-placeholder="Notes..." spellcheck="false"></div>
+      </div>
+      <div class="slot-items-col">
+        ${mainSpots}
+      </div>
+    </div>
+    <div class="slot-acc-strip">${accSpots}</div>
+  </div>`;
+}
+
+function renderProductTable(m, lineItems, idx) {
+  const fields = m.cellValuesByFieldId;
+  const name = getLV(fields[FIELD.MODULE_NAME], 'Unnamed').replace(' - Market Walk', '');
+  const showroom = getLV(fields[FIELD.MODULE_SHOWROOM], '');
+  const callouts = getAllLVs(fields[FIELD.MODULE_CALLOUTS]);
+
+  const groups = [
+    { label: 'Main Group', range: [1, 8] },
+    { label: 'Occasional Tables', range: [9, 11] },
+    { label: 'Rugs', range: [12, 14] },
+    { label: 'Lamps', range: [15, 16] },
+    { label: 'Accent Chair / Cabinet', range: [17, 18] },
+    { label: 'Remaining Accents', range: [19, 29] },
+    { label: 'Series Components', range: [30, 40] },
+  ];
+
+  const sortedItems = [...lineItems].sort((a, b) => {
+    const sa = a.cellValuesByFieldId[FIELD.LI_SORT] || 999;
+    const sb = b.cellValuesByFieldId[FIELD.LI_SORT] || 999;
+    return sa - sb;
+  });
+
+  let rows = '';
+  for (const grp of groups) {
+    const items = sortedItems.filter(li => {
+      const s = li.cellValuesByFieldId[FIELD.LI_SORT];
+      return s >= grp.range[0] && s <= grp.range[1];
+    });
+    if (items.length === 0) continue;
+    rows += `<tr class="pt-group-header"><td colspan="7">${grp.label}</td></tr>`;
+    for (const li of items) {
+      const f = li.cellValuesByFieldId;
+      const spot = f[FIELD.LI_SORT] || '—';
+      const sku = getLV(f[FIELD.LI_SKU], '');
+      const itemName = getLV(f[FIELD.LI_ITEM_NAME], '');
+      const dims = getLV(f[FIELD.LI_DIMS], '');
+      const price = getPrice(li);
+      const koUrl = getLV(f[FIELD.LI_KO_URL], '');
+      const kit = getLV(f[FIELD.LI_KIT], '');
+      const liStatus = getLV(f[FIELD.LI_STATUS], '');
+      const statusTag = liStatus === 'New'
+        ? '<span class="pt-status-new">New</span>'
+        : liStatus === 'Current' ? '<span class="pt-status-current">Current</span>' : '';
+      rows += `<tr>
+        <td class="pt-spot"><div class="pt-spot-num">${spot}</div></td>
+        <td class="pt-img">
+          ${koUrl ? `<img src="${koUrl}" class="pt-product-img" alt="${sku}" onerror="this.style.opacity='0'">` : '<div class="pt-product-img"></div>'}
+        </td>
+        <td><div class="pt-sku">${sku}</div></td>
+        <td>
+          <div class="pt-name">${itemName} ${statusTag}</div>
+          ${kit ? `<div class="pt-kit">${kit}</div>` : ''}
+        </td>
+        <td class="pt-dims">${dims}</td>
+        <td class="pt-price">${price}</td>
+      </tr>`;
+    }
+  }
+
+  if (!rows) rows = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--text-light);font-size:13px;">No line items found for this module</td></tr>`;
+
+  return `<div class="product-slot-card" id="product-slot-${idx}">
+    <div class="product-slot-header">
+      <div class="product-slot-num">${idx + 1}</div>
+      <div class="product-slot-name">${name}</div>
+      <div class="product-slot-meta">${showroom}${callouts.length ? ' · ' + callouts.join(', ') : ''}</div>
+    </div>
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th class="pt-spot">#</th>
+          <th class="pt-img"></th>
+          <th>SKU</th>
+          <th>Item</th>
+          <th>Dimensions</th>
+          <th class="right">Price</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function scrollToSlot(idx) {
+  setTimeout(() => {
+    const el = document.getElementById(`product-slot-${idx}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-walk').classList.toggle('active', tab === 'walk');
+  document.getElementById('tab-products').classList.toggle('active', tab === 'products');
+  document.getElementById('tab-walk-btn').classList.toggle('active', tab === 'walk');
+  document.getElementById('tab-products-btn').classList.toggle('active', tab === 'products');
+}
+
+function setPriceMode(mode) {
+  priceMode = mode;
+  ['regular','wc','w335'].forEach(m => {
+    document.getElementById('price-' + m).classList.toggle('active', m === mode);
+  });
+  renderWalk();
+}
+
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+  document.getElementById('loading-overlay').style.display = 'flex';
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+
+
+  // ── Static element event listeners (replaces inline onclick) ──
+  document.getElementById('connect-btn').addEventListener('click', connectAirtable);
+  document.getElementById('pat-input').addEventListener('keydown', e => { if (e.key === 'Enter') connectAirtable(); });
+  document.getElementById('module-search').addEventListener('input', e => filterModules(e.target.value));
+  document.querySelector('[onclick]'); // no-op safety
+  
+  function bindStaticButtons() {
+    const refreshBtn = document.querySelector('.btn-ghost');
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshModules);
+    const printBtn = document.querySelector('.btn-accent');
+    if (printBtn) printBtn.addEventListener('click', () => window.print());
+    document.getElementById('tab-walk-btn')?.addEventListener('click', () => switchTab('walk'));
+    document.getElementById('tab-products-btn')?.addEventListener('click', () => switchTab('products'));
+    document.getElementById('price-regular')?.addEventListener('click', () => setPriceMode('regular'));
+    document.getElementById('price-wc')?.addEventListener('click', () => setPriceMode('wc'));
+    document.getElementById('price-w335')?.addEventListener('click', () => setPriceMode('w335'));
+  }
+  bindStaticButtons();
+
+  // Event delegation for dynamically rendered elements
+  document.addEventListener('click', function(e) {
+    // Add slot button
+    const addBtn = e.target.closest('.add-btn');
+    if (addBtn && addBtn.dataset.moduleId) { addSlot(addBtn.dataset.moduleId); return; }
+    // Remove slot button
+    const removeBtn = e.target.closest('.slot-remove');
+    if (removeBtn && removeBtn.dataset.idx !== undefined) { removeSlot(parseInt(removeBtn.dataset.idx)); return; }
+    // View more button
+    const viewMore = e.target.closest('.view-more-btn');
+    if (viewMore && viewMore.dataset.idx !== undefined) { switchTab('products'); scrollToSlot(parseInt(viewMore.dataset.idx)); return; }
+  });
+  document.addEventListener('dragstart', e => {
+    const item = e.target.closest('.walk-slot-item');
+    if (item && item.dataset.idx !== undefined) dragStart(parseInt(item.dataset.idx));
+  });
+  document.addEventListener('dragover', e => {
+    const item = e.target.closest('.walk-slot-item');
+    if (item && item.dataset.idx !== undefined) dragOver(e, parseInt(item.dataset.idx));
+  });
+  document.addEventListener('drop', e => {
+    const item = e.target.closest('.walk-slot-item');
+    if (item && item.dataset.idx !== undefined) drop(e, parseInt(item.dataset.idx));
+  });
+  document.addEventListener('dragleave', e => {
+    const item = e.target.closest('.walk-slot-item');
+    if (item) dragLeave(e);
+  });
+
+</script>
+</body>
+</html>
